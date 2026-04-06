@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hubblo — Analyse démographique locale</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Leaflet -->
+  <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+
+  <style>
+    /* ---- Summary card ---- */
+    .summary-card {
+      background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+      border-left: 4px solid var(--hub-purple);
+    }
+    .summary-card .cmp-badge {
+      display: inline-block;
+      font-size: .75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: 6px;
+    }
+    .cmp-up   { background: #dcfce7; color: #15803d; }
+    .cmp-down { background: #fee2e2; color: #b91c1c; }
+    .cmp-eq   { background: #f3f4f6; color: #6b7280; }
+
+    /* ---- Legend dot ---- */
+    .legend-dot {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+  </style>
+
+  <style>
+    :root {
+      --hub-purple: #6366f1;
+      --hub-purple-dark: #4f46e5;
+      --hub-teal: #0ea5e9;
+    }
+
+    body {
+      background: #f1f5f9;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* ---- Navbar ---- */
+    .navbar {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      box-shadow: 0 2px 16px rgba(79,70,229,.35);
+    }
+    .navbar-brand {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff !important;
+    }
+    .navbar-brand span { color: #a5b4fc; }
+
+    /* ---- Cards ---- */
+    .card {
+      border: none;
+      border-radius: 14px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.07);
+    }
+    .card-header-custom {
+      padding: .85rem 1.25rem;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      font-weight: 700;
+      font-size: .9rem;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .card-header-custom i { color: var(--hub-purple); }
+
+    /* ---- Map ---- */
+    #map {
+      flex: 1;
+      min-height: 320px;
+      border-radius: 14px;
+      z-index: 0;
+    }
+
+    /* ---- Stat cards ---- */
+    .stat-card {
+      border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    }
+    .stat-card .stat-icon {
+      font-size: 2rem;
+      opacity: .85;
+      flex-shrink: 0;
+    }
+    .stat-card .stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .stat-card .stat-label {
+      font-size: .78rem;
+      opacity: .8;
+      margin-top: 2px;
+    }
+    .stat-bg-1 { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+    .stat-bg-2 { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .stat-bg-3 { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+    .stat-bg-4 { background: linear-gradient(135deg, #10b981, #059669); }
+
+    /* ---- Range slider ---- */
+    .form-range::-webkit-slider-thumb { background: var(--hub-purple-dark); }
+    .range-badge {
+      display: inline-block;
+      background: var(--hub-purple-dark);
+      color: #fff;
+      border-radius: 20px;
+      padding: 2px 12px;
+      font-weight: 700;
+      font-size: .85rem;
+    }
+
+    /* ---- Buttons ---- */
+    .btn-hub {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      padding: .55rem 1rem;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn-hub:hover { opacity: .9; color: #fff; transform: translateY(-1px); }
+    .btn-hub:disabled { opacity: .45; transform: none; }
+    .btn-hub-outline {
+      background: transparent;
+      border: 2px solid var(--hub-purple);
+      color: var(--hub-purple);
+      border-radius: 10px;
+      font-weight: 600;
+      padding: .5rem 1rem;
+      transition: all .2s;
+    }
+    .btn-hub-outline:hover {
+      background: var(--hub-purple);
+      color: #fff;
+    }
+
+    /* ---- Location info ---- */
+    #locationInfo {
+      font-size: .82rem;
+      color: #6b7280;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: .5rem .75rem;
+      border: 1px solid #e5e7eb;
+    }
+
+    /* ---- Geocoder search ---- */
+    .geocoder-wrap {
+      position: relative;
+    }
+    .geocoder-wrap .form-control {
+      border-radius: 10px;
+      border: 2px solid #e5e7eb;
+      font-size: .88rem;
+      padding-left: 2.2rem;
+      transition: border-color .2s;
+    }
+    .geocoder-wrap .form-control:focus {
+      border-color: var(--hub-purple);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+    }
+    .geocoder-wrap .geocoder-icon {
+      position: absolute;
+      left: .65rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      font-size: .9rem;
+      pointer-events: none;
+    }
+    .geocoder-wrap .geocoder-clear {
+      position: absolute;
+      right: .5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+      cursor: pointer;
+      display: none;
+    }
+    .geocoder-wrap .geocoder-clear:hover { color: #374151; }
+    .geocoder-spinner {
+      position: absolute;
+      right: .6rem;
+      top: 50%;
+      transform: translateY(-50%);
+      display: none;
+    }
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      z-index: 2000;
+      overflow: hidden;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .autocomplete-item {
+      padding: .55rem .85rem;
+      font-size: .83rem;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: .5rem;
+      border-bottom: 1px solid #f3f4f6;
+      transition: background .1s;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover,
+    .autocomplete-item.active { background: #eef2ff; }
+    .autocomplete-item i { color: var(--hub-purple); flex-shrink: 0; margin-top: 2px; }
+    .autocomplete-item .ac-label { font-weight: 600; color: #111827; line-height: 1.3; }
+    .autocomplete-item .ac-ctx  { font-size: .75rem; color: #6b7280; }
+
+    /* ---- Loading ---- */
+    #loadingSection {
+      display: none;
+      text-align: center;
+      padding: 3rem;
+    }
+    .spinner-hub {
+      width: 3rem;
+      height: 3rem;
+      border-width: 4px;
+      border-color: var(--hub-purple) transparent transparent transparent;
+    }
+
+    /* ---- Charts ---- */
+    .chart-wrapper canvas { max-height: 260px; }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 991px) {
+      #map { min-height: 260px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ======== Navbar ======== -->
+<nav class="navbar navbar-expand-lg mb-4">
+  <div class="container">
+    <span class="navbar-brand">
+      <i class="bi bi-geo-alt-fill me-2" style="color:#a5b4fc;"></i>Hub<span>blo</span>
+    </span>
+    <span class="text-white-50 small d-none d-md-inline">Analyse démographique de votre quartier</span>
+  </div>
+</nav>
+
+<!-- ======== Main ======== -->
+<div class="container-lg pb-5">
+
+  <!-- Row 1 — Map + Controls -->
+  <div class="row g-4 mb-4">
+
+    <!-- Map -->
+    <div class="col-lg-8 d-flex flex-column">
+      <div class="card overflow-hidden flex-grow-1">
+        <div class="card-header-custom">
+          <i class="bi bi-map"></i> Carte — Cliquez pour choisir un lieu
+        </div>
+        <div class="card-body p-0 d-flex flex-column">
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls + Stats -->
+    <div class="col-lg-4 d-flex flex-column gap-3">
+
+      <!-- Paramètres (compact) -->
+      <div class="card">
+        <div class="card-header-custom">
+          <i class="bi bi-sliders2"></i> Paramètres
+        </div>
+        <div class="card-body d-flex flex-column gap-2 py-3">
+
+          <!-- Recherche adresse -->
+          <div class="geocoder-wrap">
+            <i class="bi bi-search geocoder-icon"></i>
+            <input type="text" id="addressInput" class="form-control"
+              placeholder="Rechercher une adresse…" autocomplete="off">
+            <button id="geocoderClear" class="geocoder-clear" tabindex="-1">
+              <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="geocoder-spinner spinner-border spinner-border-sm text-primary"
+                 id="geocoderSpinner" role="status"></div>
+            <div id="autocompleteList" class="autocomplete-list" style="display:none;"></div>
+          </div>
+
+          <!-- Geoloc button -->
+          <button class="btn btn-hub-outline w-100" id="geolocBtn">
+            <i class="bi bi-crosshair2 me-2"></i>Me localiser
+          </button>
+
+          <!-- Rayon -->
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label fw-semibold text-secondary small mb-0" style="letter-spacing:.3px;">Rayon d'analyse</label>
+              <span class="range-badge" id="rayonLabel">500 m</span>
+            </div>
+            <input type="range" class="form-range" id="rayon" min="200" max="1000" step="100" value="500">
+          </div>
+
+          <!-- Location info -->
+          <div id="locationInfo" class="mt-1">
+            <i class="bi bi-cursor me-1"></i>
+            Recherchez une adresse ou cliquez sur la carte.
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 4 Stat mini-cards (cachées jusqu'au chargement) -->
+      <div id="sideStats" style="display:none;">
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="stat-card stat-bg-1 flex-column text-center p-3" style="gap:.4rem;">
+              <i class="bi bi-people-fill" style="font-size:1.4rem;opacity:.85;"></i>
+              <div>
+                <div class="stat-value" id="statPop" style="font-size:1.2rem;">—</div>
+                <div class="stat-label" style="font-size:.7rem;">Population</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="stat-card stat-bg-2 flex-column text-center p-3" style="gap:.4rem;">
+              <i class="bi bi-house-fill" style="font-size:1.4rem;opacity:.85;"></i>
+              <div>
+                <div class="stat-value" id="statMen" style="font-size:1.2rem;">—</div>
+                <div class="stat-label" style="font-size:.7rem;">Ménages</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="stat-card stat-bg-3 flex-column text-center p-3" style="gap:.4rem;">
+              <i class="bi bi-graph-down-arrow" style="font-size:1.4rem;opacity:.85;"></i>
+              <div>
+                <div class="stat-value" id="statPauv" style="font-size:1.2rem;">—</div>
+                <div class="stat-label" style="font-size:.7rem;">Taux de pauvreté</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="stat-card stat-bg-4 flex-column text-center p-3" style="gap:.4rem;">
+              <i class="bi bi-cash-coin" style="font-size:1.4rem;opacity:.85;"></i>
+              <div>
+                <div class="stat-value" id="statRevenu" style="font-size:1.1rem;">—</div>
+                <div class="stat-label" style="font-size:.7rem;">Revenu / pers.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loadingSection">
+    <div class="spinner-border spinner-hub text-primary" role="status"></div>
+    <p class="mt-3 text-muted fw-semibold">Chargement des données INSEE...</p>
+  </div>
+
+  <!-- Error -->
+  <div id="errorAlert" class="alert alert-danger d-none" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <span id="errorMsg">Erreur lors du chargement des données.</span>
+  </div>
+
+  <!-- ===== Results (hidden until data loaded) ===== -->
+  <div id="statsSection" style="display:none;">
+
+    <!-- Row 3 — Charts -->
+    <div class="row g-4 mb-4">
+
+      <!-- Âge population -->
+      <div class="col-lg-7">
+        <div class="card h-100">
+          <div class="card-header-custom">
+            <i class="bi bi-people"></i> Répartition par âge de la population
+          </div>
+          <div class="card-body chart-wrapper">
+            <canvas id="chartAge"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Âge logements -->
+      <div class="col-lg-5">
+        <div class="card h-100">
+          <div class="card-header-custom">
+            <i class="bi bi-building"></i> Période de construction des logements
+          </div>
+          <div class="card-body chart-wrapper">
+            <canvas id="chartLog"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Row 4 — Ménages chart -->
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header-custom">
+            <i class="bi bi-house-heart"></i> Caractéristiques des ménages
+          </div>
+          <div class="card-body chart-wrapper">
+            <canvas id="chartMen" style="max-height:200px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary text card -->
+    <div class="card summary-card mt-4">
+      <div class="card-body py-3 px-4">
+        <div class="d-flex align-items-start gap-2 mb-2">
+          <i class="bi bi-info-circle-fill text-primary mt-1" style="flex-shrink:0;"></i>
+          <div id="summaryText" class="small text-secondary lh-lg">—</div>
+        </div>
+        <div class="d-flex gap-3 mt-2">
+          <span class="d-flex align-items-center gap-1 small text-muted">
+            <span class="legend-dot" style="background:#9ca3af;"></span>
+            <span id="legendRef">Zone de référence</span>
+          </span>
+          <span class="d-flex align-items-center gap-1 small text-muted">
+            <span class="legend-dot" style="background:#6366f1;"></span>
+            <span id="legendSel">Votre lieu</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /statsSection -->
+</div><!-- /container -->
+
+<!-- Footer -->
+<footer class="text-center text-muted small py-4 border-top bg-white mt-5">
+  Données INSEE Filosofi · Fonds de carte © OpenStreetMap contributors · API Hubblo
+</footer>
+
+<!-- ======== Scripts ======== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<script>
+'use strict';
+
+// ── State ────────────────────────────────────────────────────────────────────
+let selectedLatLng   = null;
+let circleLayer      = null;
+let polygonLayer     = null;
+let chartInstances   = {};
+let acIndex          = -1;   // autocomplete keyboard selection
+let acResults        = [];   // current suggestion list
+
+// ── Leaflet map ──────────────────────────────────────────────────────────────
+const map = L.map('map').setView([43.596, 1.4419], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+map.on('click', e => setLocation(e.latlng));
+
+function setLocation(latlng, label = null) {
+  selectedLatLng = latlng;
+  const rayon = parseInt(document.getElementById('rayon').value);
+
+  if (circleLayer) map.removeLayer(circleLayer);
+  circleLayer = L.circle(latlng, {
+    radius:      rayon,
+    color:       '#6366f1',
+    fillColor:   '#6366f1',
+    fillOpacity: 0.12,
+    weight:      2.5
+  }).addTo(map);
+
+  if (label) {
+    showLocationInfo(label);
+    loadData();
+  } else {
+    showLocationInfo(null); // affiche coords en attendant l'adresse
+    reverseGeocode(latlng).then(addr => showLocationInfo(addr));
+    loadData();
+  }
+}
+
+function showLocationInfo(label) {
+  const latlng = selectedLatLng;
+  if (!latlng) return;
+  const addrLine = label
+    ? `<i class="bi bi-geo-alt-fill text-primary me-1"></i><strong>${label}</strong><br>`
+    : `<i class="bi bi-geo-alt-fill text-primary me-1"></i>
+       <strong>Lat</strong> ${latlng.lat.toFixed(5)} &nbsp;
+       <strong>Lng</strong> ${latlng.lng.toFixed(5)}<br>`;
+  document.getElementById('locationInfo').innerHTML =
+    addrLine +
+    `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Lieu sélectionné</span>`;
+}
+
+async function reverseGeocode(latlng) {
+  try {
+    const url = `https://data.geopf.fr/geocodage/reverse?lon=${latlng.lng}&lat=${latlng.lat}&limit=1`;
+    const r = await fetch(url);
+    const j = await r.json();
+    return j.features?.[0]?.properties?.label ?? null;
+  } catch { return null; }
+}
+
+// ── Autocomplete ─────────────────────────────────────────────────────────────
+const addressInput   = document.getElementById('addressInput');
+const autocompleteEl = document.getElementById('autocompleteList');
+const geocoderClear  = document.getElementById('geocoderClear');
+const geocoderSpin   = document.getElementById('geocoderSpinner');
+
+let acDebounce = null;
+
+addressInput.addEventListener('input', function () {
+  const q = this.value.trim();
+  geocoderClear.style.display = q ? 'block' : 'none';
+  clearTimeout(acDebounce);
+  if (q.length < 3) { hideAC(); return; }
+  acDebounce = setTimeout(() => fetchSuggestions(q), 280);
+});
+
+addressInput.addEventListener('keydown', function (e) {
+  if (!acResults.length) return;
+  if (e.key === 'ArrowDown')  { e.preventDefault(); moveAC(1);  }
+  if (e.key === 'ArrowUp')    { e.preventDefault(); moveAC(-1); }
+  if (e.key === 'Enter')      { e.preventDefault(); if (acIndex >= 0) selectAC(acIndex); }
+  if (e.key === 'Escape')     { hideAC(); }
+});
+
+geocoderClear.addEventListener('click', () => {
+  addressInput.value = '';
+  geocoderClear.style.display = 'none';
+  hideAC();
+  addressInput.focus();
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.geocoder-wrap')) hideAC();
+});
+
+async function fetchSuggestions(q) {
+  geocoderSpin.style.display = 'block';
+  try {
+    const url = `https://data.geopf.fr/geocodage/search?q=${encodeURIComponent(q)}&limit=6`;
+    const r = await fetch(url);
+    const j = await r.json();
+    acResults = j.features ?? [];
+    renderAC();
+  } catch { hideAC(); }
+  finally { geocoderSpin.style.display = 'none'; }
+}
+
+function renderAC() {
+  if (!acResults.length) { hideAC(); return; }
+  acIndex = -1;
+  autocompleteEl.innerHTML = acResults.map((f, i) => {
+    const p   = f.properties;
+    const ctx = p.context ?? '';
+    return `<div class="autocomplete-item" data-idx="${i}">
+      <i class="bi bi-geo-alt"></i>
+      <div>
+        <div class="ac-label">${p.label}</div>
+        ${ctx ? `<div class="ac-ctx">${ctx}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  autocompleteEl.querySelectorAll('.autocomplete-item').forEach(el => {
+    el.addEventListener('mousedown', e => {
+      e.preventDefault();
+      selectAC(parseInt(el.dataset.idx));
+    });
+  });
+  autocompleteEl.style.display = '';
+}
+
+function moveAC(dir) {
+  const items = autocompleteEl.querySelectorAll('.autocomplete-item');
+  if (acIndex >= 0) items[acIndex].classList.remove('active');
+  acIndex = Math.max(-1, Math.min(acResults.length - 1, acIndex + dir));
+  if (acIndex >= 0) {
+    items[acIndex].classList.add('active');
+    addressInput.value = acResults[acIndex].properties.label;
+  }
+}
+
+function selectAC(idx) {
+  const f    = acResults[idx];
+  const [lng, lat] = f.geometry.coordinates;
+  const label = f.properties.label;
+  addressInput.value = label;
+  geocoderClear.style.display = 'block';
+  hideAC();
+  map.setView([lat, lng], 15);
+  setLocation(L.latLng(lat, lng), label);
+}
+
+function hideAC() {
+  autocompleteEl.style.display = 'none';
+  autocompleteEl.innerHTML = '';
+  acResults = [];
+  acIndex = -1;
+}
+
+// ── Radius slider ────────────────────────────────────────────────────────────
+let rayonDebounce = null;
+document.getElementById('rayon').addEventListener('input', function () {
+  document.getElementById('rayonLabel').textContent = this.value + ' m';
+  if (circleLayer && selectedLatLng) circleLayer.setRadius(parseInt(this.value));
+  if (selectedLatLng) {
+    clearTimeout(rayonDebounce);
+    rayonDebounce = setTimeout(loadData, 600);
+  }
+});
+
+// ── Geolocation ──────────────────────────────────────────────────────────────
+document.getElementById('geolocBtn').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    showError("La géolocalisation n'est pas disponible dans ce navigateur.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
+      map.setView(latlng, 15);
+      setLocation(latlng);
+    },
+    () => showError("Impossible d'obtenir votre position. Vérifiez les permissions.")
+  );
+});
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function loadData() {
+  if (!selectedLatLng) return;
+
+  const rayon = parseInt(document.getElementById('rayon').value);
+
+  setLoading(true);
+  hideError();
+  document.getElementById('statsSection').style.display = 'none';
+
+  try {
+    // API accepts WGS84 coordinates directly
+    const url = `https://hubblo.up.railway.app/filosofi?x=${selectedLatLng.lng}&y=${selectedLatLng.lat}&radius=${rayon}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Serveur: HTTP ${resp.status}`);
+    const json = await resp.json();
+    const data = json.message;
+
+    renderPolygon(data);
+    renderStatCards(data);
+    renderSummary(data);
+    renderAllCharts(data);
+    document.getElementById('sideStats').style.display = '';
+    document.getElementById('statsSection').style.display = '';
+  } catch (err) {
+    showError('Impossible de charger les données : ' + err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── Polygon overlay (unité statistique INSEE) ─────────────────────────────────
+function renderPolygon(data) {
+  if (polygonLayer) { map.removeLayer(polygonLayer); polygonLayer = null; }
+  const geomStr = data['geometry']?.[0];
+  if (!geomStr) return;
+  try {
+    const geomObj  = JSON.parse(geomStr);
+    const feature  = geomObj.type === 'Feature'
+      ? geomObj
+      : { type: 'Feature', geometry: geomObj, properties: {} };
+    polygonLayer = L.geoJSON(feature, {
+      style: {
+        color:       '#6366f1',
+        fillColor:   '#818cf8',
+        fillOpacity: 0.12,
+        weight:      2.5,
+        dashArray:   '6,4'
+      }
+    }).addTo(map);
+    map.fitBounds(polygonLayer.getBounds(), { padding: [40, 40] });
+  } catch (e) { console.warn('Geometry parse error:', e); }
+}
+
+// ── Stat cards ────────────────────────────────────────────────────────────────
+function renderStatCards(data) {
+  const pop    = vi(data, 'ind',      1);
+  const men    = vi(data, 'men',      1);
+  const pauv   = vi(data, 'men_pauv', 1);
+  const snv    = vi(data, 'ind_snv',  1);
+
+  setText('statPop',    Math.round(pop).toLocaleString('fr-FR'));
+  setText('statMen',    Math.round(men).toLocaleString('fr-FR'));
+  setText('statPauv',   men  > 0 ? pct(pauv / men) : '—');
+  setText('statRevenu', pop  > 0 ? Math.round(snv / pop).toLocaleString('fr-FR') + ' €' : '—');
+}
+
+// ── Summary text ──────────────────────────────────────────────────────────────
+function renderSummary(data) {
+  const uRef = data['unit']?.[0] ?? 'Zone de référence';
+  const uSel = data['unit']?.[1] ?? 'Votre lieu';
+
+  const menSel = Math.max(vi(data, 'men', 1), 1);
+  const menRef = Math.max(vi(data, 'men', 0), 1);
+  const indSel = Math.max(vi(data, 'ind', 1), 1);
+  const indRef = Math.max(vi(data, 'ind', 0), 1);
+  const snvSel = vi(data, 'ind_snv', 1);
+  const snvRef = vi(data, 'ind_snv', 0);
+
+  const tailleSel = (indSel / menSel).toFixed(2);
+  const tailleRef = (indRef / menRef).toFixed(2);
+  const revSel    = Math.round(snvSel / indSel).toLocaleString('fr-FR');
+  const revRef    = Math.round(snvRef / indRef).toLocaleString('fr-FR');
+
+  const diffTaille = ((indSel / menSel) - (indRef / menRef)).toFixed(2);
+  const diffRev    = Math.round(snvSel / indSel) - Math.round(snvRef / indRef);
+
+  const badgeTaille = cmpBadge(diffTaille, 'pers.');
+  const badgeRev    = cmpBadge(diffRev, '€');
+
+  setText('legendRef', uRef);
+  setText('legendSel', uSel);
+  document.getElementById('summaryText').innerHTML =
+    `<strong>${uSel}</strong> compte <strong>${Math.round(menSel).toLocaleString('fr-FR')} ménages</strong>
+     avec une taille moyenne de <strong>${tailleSel} personnes</strong>${badgeTaille} par ménage,
+     contre <strong>${tailleRef}</strong> pour ${uRef}.<br>
+     Le revenu moyen par personne est de <strong>${revSel} €</strong>${badgeRev},
+     contre <strong>${revRef} €</strong> pour ${uRef}.`;
+}
+
+function cmpBadge(diff, unit) {
+  if (Math.abs(diff) < 0.01) return `<span class="cmp-badge cmp-eq">≈ égal</span>`;
+  const sign  = diff > 0 ? '+' : '';
+  const cls   = diff > 0 ? 'cmp-up' : 'cmp-down';
+  const arrow = diff > 0 ? '▲' : '▼';
+  return `<span class="cmp-badge ${cls}">${arrow} ${sign}${diff} ${unit}</span>`;
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+function renderAllCharts(data) {
+  const uRef = data['unit']?.[0] ?? 'Référence';
+  const uSel = data['unit']?.[1] ?? 'Votre lieu';
+
+  // 1. Âge de la population (barres groupées verticales)
+  {
+    const keys   = ['ind_0_3','ind_4_5','ind_6_10','ind_18_24','ind_25_39',
+                    'ind_40_54','ind_55_64','ind_65_79','ind_80p'];
+    const labels = ['0–3 ans','4–5 ans','6–10 ans','18–24 ans','25–39 ans',
+                    '40–54 ans','55–64 ans','65–79 ans','80 ans +'];
+    const totRef = sumKeysIdx(data, [...keys, 'ind_inc'], 0);
+    const totSel = sumKeysIdx(data, [...keys, 'ind_inc'], 1);
+    makeGroupedBar('chartAge', labels,
+      keys.map(k => totRef > 0 ? (vi(data, k, 0) / totRef) * 100 : 0),
+      keys.map(k => totSel > 0 ? (vi(data, k, 1) / totSel) * 100 : 0),
+      uRef, uSel, false
+    );
+  }
+
+  // 2. Période de construction des logements (barres groupées + log_soc)
+  {
+    const keys   = ['log_av45','log_45_70','log_70_90','log_ap90','log_soc'];
+    const labels = ['Avant 1945','1945–1970','1970–1990','Après 1990','Sociaux'];
+    const baseKeys = ['log_av45','log_45_70','log_70_90','log_ap90','log_inc'];
+    const totRef = sumKeysIdx(data, baseKeys, 0);
+    const totSel = sumKeysIdx(data, baseKeys, 1);
+    makeGroupedBar('chartLog', labels,
+      keys.map(k => totRef > 0 ? (vi(data, k, 0) / totRef) * 100 : 0),
+      keys.map(k => totSel > 0 ? (vi(data, k, 1) / totSel) * 100 : 0),
+      uRef, uSel, false
+    );
+  }
+
+  // 3. Caractéristiques des ménages (barres groupées horizontales + men_coll, men_mais)
+  {
+    const keys   = ['men_pauv','men_1ind','men_5ind','men_prop','men_fmp','men_coll','men_mais'];
+    const labels = ['Pauvres','1 personne','5 pers. +','Propriétaires','Mono-parentales','En immeuble','En maison'];
+    const menRef = Math.max(vi(data, 'men', 0), 1);
+    const menSel = Math.max(vi(data, 'men', 1), 1);
+    makeGroupedBar('chartMen', labels,
+      keys.map(k => (vi(data, k, 0) / menRef) * 100),
+      keys.map(k => (vi(data, k, 1) / menSel) * 100),
+      uRef, uSel, true
+    );
+  }
+}
+
+// ── Grouped bar chart factory ─────────────────────────────────────────────────
+function makeGroupedBar(id, labels, valuesRef, valuesSel, uRef, uSel, horizontal) {
+  if (chartInstances[id]) chartInstances[id].destroy();
+  const ctx = document.getElementById(id).getContext('2d');
+
+  chartInstances[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: uRef,
+          data: valuesRef.map(v => +v.toFixed(2)),
+          backgroundColor: 'rgba(156,163,175,0.65)',
+          borderColor:     'rgba(156,163,175,0.9)',
+          borderWidth: 1,
+          borderRadius: 4
+        },
+        {
+          label: uSel,
+          data: valuesSel.map(v => +v.toFixed(2)),
+          backgroundColor: 'rgba(99,102,241,0.8)',
+          borderColor:     'rgba(79,70,229,1)',
+          borderWidth: 1,
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      indexAxis: horizontal ? 'y' : 'x',
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { padding: 12, font: { size: 11 }, boxWidth: 12, usePointStyle: true }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = horizontal ? ctx.parsed.x : ctx.parsed.y;
+              return ` ${ctx.dataset.label} : ${v.toFixed(1)} %`;
+            }
+          }
+        }
+      },
+      scales: {
+        [horizontal ? 'x' : 'y']: {
+          beginAtZero: true,
+          grid:  { color: 'rgba(0,0,0,.05)' },
+          ticks: { callback: v => v + ' %' }
+        },
+        [horizontal ? 'y' : 'x']: {
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function vi(data, key, idx)        { return data[key]?.[idx] ?? 0; }
+function sumKeysIdx(data, keys, i) { return keys.reduce((s, k) => s + vi(data, k, i), 0); }
+function pct(ratio)                { return (ratio * 100).toFixed(1) + ' %'; }
+function setText(id, text)         { document.getElementById(id).textContent = text; }
+function setLoading(v)             { document.getElementById('loadingSection').style.display = v ? '' : 'none'; }
+function showError(msg)            {
+  setText('errorMsg', msg);
+  document.getElementById('errorAlert').classList.remove('d-none');
+}
+function hideError()               { document.getElementById('errorAlert').classList.add('d-none'); }
+</script>
+
+</body>
+</html>
