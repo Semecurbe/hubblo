@@ -474,6 +474,33 @@
   Données INSEE Filosofi · Fonds de carte © OpenStreetMap contributors · API Hubblo
 </footer>
 
+<!-- RGPD Banner -->
+<div id="rgpdBanner" style="
+  display:none;
+  position:fixed;
+  bottom:0; left:0; right:0;
+  background:#fff;
+  border-top:3px solid #6366f1;
+  box-shadow:0 -4px 24px rgba(0,0,0,.10);
+  z-index:9999;
+  padding:1.2rem 2rem;
+">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+    <div style="flex:1;min-width:260px;">
+      <p style="margin:0;font-size:.85rem;color:#374151;line-height:1.6;">
+        <strong style="color:#6366f1;">🔒 Respect de votre vie privée</strong><br>
+        Hubblo affiche des données publiques INSEE sur votre localisation. Aucune donnée personnelle n'est collectée, transmise ou stockée. La géolocalisation utilisée reste uniquement dans votre navigateur et n'est jamais partagée avec des tiers.
+        Cette application est conforme au <strong>RGPD</strong>.
+      </p>
+    </div>
+    <button id="rgpdAccept" style="
+      background:#6366f1;color:#fff;border:none;border-radius:8px;
+      padding:.55rem 1.4rem;font-size:.85rem;font-weight:600;cursor:pointer;
+      white-space:nowrap;flex-shrink:0;
+    ">J'ai compris</button>
+  </div>
+</div>
+
 <!-- ======== Scripts ======== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -897,6 +924,17 @@ function showError(msg)            {
   document.getElementById('errorAlert').classList.remove('d-none');
 }
 function hideError()               { document.getElementById('errorAlert').classList.add('d-none'); }
+
+// ── RGPD Banner ───────────────────────────────────────────────────────────────
+(function () {
+  if (!localStorage.getItem('rgpd_accepted')) {
+    document.getElementById('rgpdBanner').style.display = 'block';
+  }
+  document.getElementById('rgpdAccept').addEventListener('click', function () {
+    localStorage.setItem('rgpd_accepted', '1');
+    document.getElementById('rgpdBanner').style.display = 'none';
+  });
+})();
 </script>
 
 </body>
