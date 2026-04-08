@@ -1,0 +1,1 @@
+Pour configurer analytics : https://console.cloud.google.com/
