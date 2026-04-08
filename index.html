@@ -916,12 +916,37 @@ function hideError()               { document.getElementById('errorAlert').class
 (function () {
   if (!localStorage.getItem('rgpd_accepted')) {
     document.getElementById('rgpdBanner').style.display = 'block';
+  } else {
+    document.dispatchEvent(new Event('rgpd_accepted'));
   }
   document.getElementById('rgpdAccept').addEventListener('click', function () {
     localStorage.setItem('rgpd_accepted', '1');
     document.getElementById('rgpdBanner').style.display = 'none';
+    document.dispatchEvent(new Event('rgpd_accepted'));
   });
 })();
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDkrIZqbTe3qbzpWQkm02ifCd1oiCHKGTA",
+    authDomain: "hubblo-6a671.firebaseapp.com",
+    projectId: "hubblo-6a671",
+    storageBucket: "hubblo-6a671.firebasestorage.app",
+    messagingSenderId: "937840019703",
+    appId: "1:937840019703:web:ffcff38f324194b4866bf2",
+    measurementId: "G-F87YNHWH0V"
+  };
+
+  function initFirebase() {
+    const app = initializeApp(firebaseConfig);
+    getAnalytics(app);
+  }
+
+  document.addEventListener('rgpd_accepted', initFirebase, { once: true });
 </script>
 
 </body>
