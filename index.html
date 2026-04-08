@@ -507,6 +507,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
+L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
+
 map.on('click', e => setLocation(e.latlng));
 
 function setLocation(latlng, label = null) {
