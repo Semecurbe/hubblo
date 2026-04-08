@@ -1,1 +1,1 @@
-Pour configurer analytics : https://console.cloud.google.com/
+* Passage sous https://cloud.umami.is/analytics/eu/websites/23abc380-e8de-403b-a429-16be7a6d7585/realtime pour analytics

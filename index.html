@@ -476,7 +476,7 @@
     <div style="flex:1;min-width:260px;">
       <p style="margin:0;font-size:.85rem;color:#374151;line-height:1.6;">
         <strong style="color:#6366f1;">🔒 Respect de votre vie privée</strong><br>
-        Hubblo utilise Firebase Analytics pour mesurer l'audience du site. Aucune donnée personnelle n'est collectée sans votre accord. La géolocalisation reste uniquement dans votre navigateur.
+        Hubblo utilise Umami Analytics pour mesurer l'audience du site de façon anonyme et sans cookie. La géolocalisation reste uniquement dans votre navigateur.
         <a href="politique-confidentialite.html" style="color:#6366f1;">Politique de confidentialité</a>
       </p>
     </div>
@@ -945,26 +945,16 @@ function hideError()               { document.getElementById('errorAlert').class
 })();
 </script>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDkrIZqbTe3qbzpWQkm02ifCd1oiCHKGTA",
-    authDomain: "hubblo-6a671.firebaseapp.com",
-    projectId: "hubblo-6a671",
-    storageBucket: "hubblo-6a671.firebasestorage.app",
-    messagingSenderId: "937840019703",
-    appId: "1:937840019703:web:ffcff38f324194b4866bf2",
-    measurementId: "G-F87YNHWH0V"
-  };
-
-  function initFirebase() {
-    const app = initializeApp(firebaseConfig);
-    getAnalytics(app);
+<script>
+  function initUmami() {
+    var s = document.createElement('script');
+    s.defer = true;
+    s.src = 'https://cloud.umami.is/script.js';
+    s.setAttribute('data-website-id', '23abc380-e8de-403b-a429-16be7a6d7585');
+    document.head.appendChild(s);
   }
 
-  document.addEventListener('rgpd_accepted', initFirebase, { once: true });
+  document.addEventListener('rgpd_accepted', initUmami, { once: true });
 </script>
 
 </body>

@@ -117,14 +117,14 @@
             <td>Consentement (demande explicite)</td>
           </tr>
           <tr>
-            <td>Données de navigation (pages visitées, clics, durée)</td>
-            <td>Firebase Analytics (Google)</td>
-            <td>Mesure d'audience anonymisée</td>
+            <td>Données de navigation (pages visitées, référent, durée)</td>
+            <td>Umami Analytics</td>
+            <td>Mesure d'audience anonymisée, sans cookie</td>
             <td>Consentement (bandeau RGPD)</td>
           </tr>
           <tr>
-            <td>Adresse IP anonymisée</td>
-            <td>Firebase Analytics</td>
+            <td>Adresse IP (non stockée, utilisée pour la détection de pays)</td>
+            <td>Umami Analytics</td>
             <td>Localisation géographique approximative (pays/région)</td>
             <td>Consentement (bandeau RGPD)</td>
           </tr>
@@ -141,22 +141,25 @@
     <h2>3. Cookies et traceurs</h2>
     <p>Hubblo utilise uniquement :</p>
     <ul>
-      <li><strong>localStorage</strong> (pas un cookie) : pour mémoriser votre acceptation du bandeau RGPD. Aucune date d'expiration imposée par le serveur.</li>
-      <li><strong>Cookies Firebase/Google Analytics</strong> : activés <em>uniquement après votre consentement</em>, ils permettent la mesure d'audience anonymisée. Durée : 13 mois maximum.</li>
+      <li><strong>localStorage</strong> (pas un cookie) : pour mémoriser votre choix RGPD. Aucune date d'expiration imposée par le serveur.</li>
+      <li><strong>Umami Analytics</strong> : activé <em>uniquement après votre consentement</em>. Umami est une solution <strong>sans cookie</strong> — aucun traceur n'est déposé dans votre navigateur.</li>
     </ul>
     <p>Vous pouvez retirer votre consentement à tout moment en vidant le localStorage de votre navigateur (Paramètres → Confidentialité → Données de site).</p>
 
     <!-- 4 -->
-    <h2>4. Sous-traitant — Google Firebase</h2>
+    <h2>4. Sous-traitant — Umami Analytics</h2>
     <p>
-      Nous utilisons <strong>Firebase Analytics</strong> (Google LLC, USA) pour la mesure d'audience.
-      Google est certifié au <strong>Data Privacy Framework EU-US</strong>, garantissant un niveau de protection adéquat pour les transferts de données vers les États-Unis.
+      Nous utilisons <strong>Umami Cloud</strong> pour la mesure d'audience. Umami est une solution open source, <strong>sans cookie</strong>, qui ne collecte aucune donnée personnelle identifiable et ne revend aucune donnée à des tiers.
     </p>
+    <ul>
+      <li>Aucun cookie déposé</li>
+      <li>Adresse IP non stockée</li>
+      <li>Données hébergées en Europe</li>
+      <li>Conforme RGPD par conception</li>
+    </ul>
     <p>
-      <a href="https://firebase.google.com/terms/data-processing-terms" target="_blank" rel="noopener">Accord de traitement des données Google Firebase <i class="bi bi-box-arrow-up-right small"></i></a><br>
-      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Politique de confidentialité Google <i class="bi bi-box-arrow-up-right small"></i></a>
+      <a href="https://umami.is/privacy" target="_blank" rel="noopener">Politique de confidentialité Umami <i class="bi bi-box-arrow-up-right small"></i></a>
     </p>
-    <p>L'anonymisation des adresses IP est activée par défaut. La rétention des données est configurée à <strong>14 mois</strong> maximum.</p>
 
     <!-- 5 -->
     <h2>5. Données publiques INSEE</h2>
@@ -168,7 +171,7 @@
     <h2>6. Durée de conservation</h2>
     <ul>
       <li><strong>Consentement RGPD</strong> (localStorage) : jusqu'à effacement par l'utilisateur.</li>
-      <li><strong>Données Firebase Analytics</strong> : 14 mois, puis suppression automatique.</li>
+      <li><strong>Données Umami Analytics</strong> : agrégées et anonymisées, conservées selon les conditions d'Umami Cloud (pas de données personnelles stockées).</li>
       <li><strong>Localisation</strong> : non conservée (traitée en mémoire uniquement).</li>
     </ul>
 
