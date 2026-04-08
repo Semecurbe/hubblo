@@ -447,6 +447,10 @@
 <footer class="text-center text-muted small py-4 border-top bg-white mt-5">
   Données INSEE Filosofi · Fonds de carte © OpenStreetMap contributors · API Hubblo
   <div class="mt-2 d-flex justify-content-center align-items-center gap-3">
+    <a href="politique-confidentialite.html" class="text-muted text-decoration-none">
+      <i class="bi bi-shield-check me-1"></i>Politique de confidentialité
+    </a>
+    <span>·</span>
     <a href="https://www.linkedin.com/in/francoissemecurbe/" target="_blank" rel="noopener" class="text-muted text-decoration-none" title="LinkedIn">
       <i class="bi bi-linkedin me-1"></i>François Semecurbe
     </a>
@@ -472,15 +476,22 @@
     <div style="flex:1;min-width:260px;">
       <p style="margin:0;font-size:.85rem;color:#374151;line-height:1.6;">
         <strong style="color:#6366f1;">🔒 Respect de votre vie privée</strong><br>
-        Hubblo affiche des données publiques INSEE sur votre localisation. Aucune donnée personnelle n'est collectée, transmise ou stockée. La géolocalisation utilisée reste uniquement dans votre navigateur et n'est jamais partagée avec des tiers.
-        Cette application est conforme au <strong>RGPD</strong>.
+        Hubblo utilise Firebase Analytics pour mesurer l'audience du site. Aucune donnée personnelle n'est collectée sans votre accord. La géolocalisation reste uniquement dans votre navigateur.
+        <a href="politique-confidentialite.html" style="color:#6366f1;">Politique de confidentialité</a>
       </p>
     </div>
-    <button id="rgpdAccept" style="
-      background:#6366f1;color:#fff;border:none;border-radius:8px;
-      padding:.55rem 1.4rem;font-size:.85rem;font-weight:600;cursor:pointer;
-      white-space:nowrap;flex-shrink:0;
-    ">J'ai compris</button>
+    <div style="display:flex;gap:.75rem;flex-shrink:0;flex-wrap:wrap;">
+      <button id="rgpdRefuse" style="
+        background:#fff;color:#6b7280;border:1.5px solid #d1d5db;border-radius:8px;
+        padding:.55rem 1.4rem;font-size:.85rem;font-weight:600;cursor:pointer;
+        white-space:nowrap;
+      ">Refuser</button>
+      <button id="rgpdAccept" style="
+        background:#6366f1;color:#fff;border:none;border-radius:8px;
+        padding:.55rem 1.4rem;font-size:.85rem;font-weight:600;cursor:pointer;
+        white-space:nowrap;
+      ">Accepter</button>
+    </div>
   </div>
 </div>
 
@@ -914,15 +925,22 @@ function hideError()               { document.getElementById('errorAlert').class
 
 // ── RGPD Banner ───────────────────────────────────────────────────────────────
 (function () {
-  if (!localStorage.getItem('rgpd_accepted')) {
+  const choice = localStorage.getItem('rgpd_choice');
+  if (!choice) {
     document.getElementById('rgpdBanner').style.display = 'block';
-  } else {
+  } else if (choice === 'accepted') {
     document.dispatchEvent(new Event('rgpd_accepted'));
   }
+
   document.getElementById('rgpdAccept').addEventListener('click', function () {
-    localStorage.setItem('rgpd_accepted', '1');
+    localStorage.setItem('rgpd_choice', 'accepted');
     document.getElementById('rgpdBanner').style.display = 'none';
     document.dispatchEvent(new Event('rgpd_accepted'));
+  });
+
+  document.getElementById('rgpdRefuse').addEventListener('click', function () {
+    localStorage.setItem('rgpd_choice', 'refused');
+    document.getElementById('rgpdBanner').style.display = 'none';
   });
 })();
 </script>
