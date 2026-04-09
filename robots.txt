@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hubblo.fr/sitemap.xml
