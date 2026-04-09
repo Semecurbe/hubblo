@@ -744,7 +744,6 @@ function renderPolygon(data) {
         dashArray:   '6,4'
       }
     }).addTo(map);
-    map.fitBounds(polygonLayer.getBounds(), { padding: [40, 40] });
   } catch (e) { console.warn('Geometry parse error:', e); }
 }
 
