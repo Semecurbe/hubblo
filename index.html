@@ -657,7 +657,7 @@ function selectAC(idx) {
   addressInput.value = label;
   geocoderClear.style.display = 'block';
   hideAC();
-  map.setView([lat, lng], 15);
+  map.setView([lat, lng], map.getZoom());
   setLocation(L.latLng(lat, lng), label);
 }
 
@@ -688,7 +688,7 @@ document.getElementById('geolocBtn').addEventListener('click', () => {
   navigator.geolocation.getCurrentPosition(
     pos => {
       const latlng = L.latLng(pos.coords.latitude, pos.coords.longitude);
-      map.setView(latlng, 15);
+      map.setView(latlng, map.getZoom());
       setLocation(latlng);
     },
     () => showError("Impossible d'obtenir votre position. Vérifiez les permissions.")
