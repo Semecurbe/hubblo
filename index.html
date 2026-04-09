@@ -522,6 +522,9 @@ L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
 map.on('click', e => setLocation(e.latlng));
 
+// Recalcule la taille de la carte dès que le conteneur flex se stabilise
+new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById('map'));
+
 // Position par défaut au chargement
 setLocation(L.latLng(43.596, 1.4419));
 
