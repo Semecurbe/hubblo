@@ -522,6 +522,9 @@ L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
 map.on('click', e => setLocation(e.latlng));
 
+// Position par défaut au chargement
+setLocation(L.latLng(43.596, 1.4419));
+
 function setLocation(latlng, label = null) {
   selectedLatLng = latlng;
   const rayon = parseInt(document.getElementById('rayon').value);
